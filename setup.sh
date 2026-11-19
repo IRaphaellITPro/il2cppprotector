@@ -5,12 +5,28 @@ if [[ -z "${PREFIX:-}" || -z "${HOME:-}" ]] || ! command -v pkg >/dev/null 2>&1;
     printf '%s\n' 'Run this script inside Termux.' >&2
     exit 1
 fi
+
 project_dir=$(cd -- "$(dirname -- "$0")" && pwd -P)
 private_dir=$(cd -- "$PREFIX/.." && pwd -P)
+
+# Allow both Termux private storage AND shared storage (/sdcard, /storage/emulated/0)
 case "$project_dir/" in
     "$private_dir/"*) ;;
-    *) printf '%s\n' 'Clone the project inside Termux private storage, not shared storage.' >&2; exit 1 ;;
+    /sdcard/*|/storage/emulated/*|/storage/self/primary/*)
+        # Shared storage requires storage access
+        if [[ ! -d "$HOME/storage/shared" ]]; then
+            printf '%s\n' 'Grant Termux access to shared storage when prompted.'
+            termux-setup-storage
+            sleep 3  # Give time for permission grant
+        fi
+        if [[ ! -d "$HOME/storage/shared" ]]; then
+            printf '%s\n' 'Shared storage access not granted. Run termux-setup-storage first.' >&2
+            exit 1
+        fi
+        ;;
+    *) printf '%s\n' 'Clone the project inside Termux private storage or shared storage (/sdcard).' >&2; exit 1 ;;
 esac
+
 if [[ "$(dpkg --print-architecture)" != aarch64 ]]; then
     printf '%s\n' 'A 64-bit ARM Termux installation is required.' >&2
     exit 1
@@ -33,6 +49,7 @@ case "$output_dir/" in
         if [[ ! -d "$HOME/storage/shared" ]]; then
             printf '%s\n' 'Grant Termux access to shared storage when prompted.'
             termux-setup-storage
+            sleep 3
         fi
         ;;
 esac
