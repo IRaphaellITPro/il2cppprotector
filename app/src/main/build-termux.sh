@@ -8,10 +8,24 @@ fi
 main_dir=$(cd -- "$(dirname -- "$0")" && pwd -P)
 private_dir=$(cd -- "$PREFIX/.." && pwd -P)
 home_dir=$(cd -- "$HOME" && pwd -P)
+
+# Allow both Termux private storage AND shared storage
 case "$main_dir/" in
     "$private_dir/"*) ;;
-    *) printf '%s\n' 'Clone the project inside Termux private storage, not shared storage.' >&2; exit 1 ;;
+    /sdcard/*|/storage/emulated/*|/storage/self/primary/*)
+        if [[ ! -d "$HOME/storage/shared" ]]; then
+            printf '%s\n' 'Grant Termux access to shared storage when prompted.'
+            termux-setup-storage
+            sleep 3
+        fi
+        if [[ ! -d "$HOME/storage/shared" ]]; then
+            printf '%s\n' 'Shared storage access not granted. Run termux-setup-storage first.' >&2
+            exit 1
+        fi
+        ;;
+    *) printf '%s\n' 'Clone the project inside Termux private storage or shared storage (/sdcard).' >&2; exit 1 ;;
 esac
+
 case "$home_dir/" in
     "$private_dir/"*) ;;
     *) printf '%s\n' 'HOME must be inside Termux private storage.' >&2; exit 1 ;;
