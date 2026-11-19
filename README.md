@@ -8,7 +8,7 @@ Install a current 64-bit ARM version of Termux, then run:
 
 ```sh
 pkg install git
-git clone REPOSITORY_URL "$HOME/Jeb_Protector"
+git clone https://github.com/IRaphaellITPro/il2cppprotector "$HOME/Jeb_Protector"
 cd "$HOME/Jeb_Protector"
 bash setup.sh
 ```
